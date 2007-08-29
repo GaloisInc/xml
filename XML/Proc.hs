@@ -2,6 +2,7 @@ module XML.Proc where
 
 import XML.Types
 import Data.Maybe(listToMaybe,fromMaybe)
+import Data.List(find)
 
 -- | Get a list of the children for an element.  We return the
 -- empty list for elements that do not support children.
@@ -20,6 +21,9 @@ onlyElems xs        = [ x | Elem x <- xs ]
 -- | Select only the text from a list of XML content.
 onlyText           :: [Content] -> [CData]
 onlyText xs         = [ x | Text x <- xs ]
+
+findChild          :: QName -> Element -> Maybe Element
+findChild q e       = find ((q ==) . elName) (onlyElems (elChildren e))
 
 -- | Find the left-most occurance of an element.
 findElement        :: QName -> Element -> Maybe Element
