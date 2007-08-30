@@ -33,6 +33,7 @@ ppElementS         :: String -> Element -> ShowS
 ppElementS i e xs   = i ++ (tagStart (elName e) (elAttribs e) $
   case elContent e of
     Nothing -> "/>\n"
+    Just [Text t] -> ">" ++ ppCData "" t (tagEnd (elName e) xs)
     Just cs -> ">\n" ++ foldr ppSub (i ++ tagEnd (elName e) xs) cs
       where ppSub e1 = ppContentS ("  " ++ i) e1 . showChar '\n'
   )
