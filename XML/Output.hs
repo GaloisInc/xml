@@ -110,16 +110,18 @@ showContentS (Text cs)  = showCDataS cs
 
 -- | Good for transmition (no extra white space etc.) but less readable.
 showElementS       :: Element -> ShowS
-showElementS (Element qn as cs) xs =
-  tagStart qn as $ case cs of
-                     Just ch -> '>' : foldr showContentS (tagEnd qn xs) ch
-                     Nothing -> "/>" ++ xs
+showElementS e xs =
+  tagStart (elName e) (elAttribs e)
+    $ case elContent e of
+        Just ch -> '>' : foldr showContentS (tagEnd (elName e) xs) ch
+        Nothing -> "/>" ++ xs
 
 -- | Convert a text element to characters.
 showCDataS         :: CData -> ShowS
-showCDataS (CData isC str)
- | isC              = showString "<![CDATA[" . escCData str . showString "]]>"
- | otherwise        = escStr str
+showCDataS cd
+ | cdVerbatim cd  = showString "<![CDATA[" . escCData (cdData cd)
+                  . showString "]]>"
+ | otherwise      = escStr (cdData cd)
 
 
 --------------------------------------------------------------------------------

@@ -8,7 +8,6 @@ import Data.Char(isSpace)
 import Data.List(isPrefixOf)
 import Numeric(readHex)
 
-
 parseXMLDoc  :: String -> Maybe Element
 parseXMLDoc xs  = strip (parseXML xs)
   where strip cs = case onlyElems cs of
@@ -42,11 +41,12 @@ nodes ns ps (TokText txt : ts) =
 
   in (Text txt { cdData = cdData txt ++ more } : es1, qs, ts1)
 
-nodes cur_info ps (TokStart t as empty : ts) = (node : siblings, open, toks)
+nodes cur_info ps (TokStart p t as empty : ts) = (node : siblings, open, toks)
   where
   new_name  = annotName new_info t
   new_info  = foldr addNS cur_info as
-  node      = Elem Element { elName    = new_name,
+  node      = Elem Element { elLine    = Just p,
+                             elName    = new_name,
                              elAttribs = map (annotAttr new_info) as,
                              elContent = children }
 
@@ -58,13 +58,14 @@ nodes cur_info ps (TokStart t as empty : ts) = (node : siblings, open, toks)
                         [] -> nodes cur_info ps ts1
                         _ : qs3 -> ([],qs3,ts1))
 
-nodes ns ps (TokEnd t : ts)   = let t1 = annotName ns t
+nodes ns ps (TokEnd p t : ts)   = let t1 = annotName ns t
                                 in case break (t1 ==) ps of
                                   (as,_:_) -> ([],as,ts)
                                   -- Unknown closing tag. Insert as text.
                                   (_,[]) ->
                                     let (es,qs,ts1) = nodes ns ps ts
                                     in (Text CData {
+                                               cdLine = Just p,
                                                cdVerbatim = False,
                                                cdData = tagEnd t ""
                                               } : es,qs, ts1)
@@ -92,38 +93,46 @@ addNS (Attr { attrKey = key, attrVal = val }) (ns,def) =
 
 -- Lexer -----------------------------------------------------------------------
 
-data Token              = TokStart QName [Attr] Bool  -- is empty?
-                        | TokEnd QName
+type LChar              = (Line,Char)
+type LString            = [LChar]
+data Token              = TokStart Line QName [Attr] Bool  -- is empty?
+                        | TokEnd Line QName
                         | TokText CData
                           deriving Show
 
-
 tokens             :: String -> [Token]
-tokens ('<' : '!' : cs) = special cs
+tokens = tokens' . linenumber 1
 
-tokens ('<' : cs)   = tag (dropWhile isSpace cs)
-tokens []           = []
-tokens cs           = let (as,bs) = break ('<' ==) cs
-                      in TokText (CData False (decode as)) : tokens bs
+tokens' :: LString -> [Token]
+tokens' ((_,'<') : c@(_,'!') : cs) = special c cs
 
-special :: String -> [Token]
-special ('-' : '-' : cs) = skip cs
-  where skip ('-' : '-' : '>' : ds) = tokens ds
+tokens' ((_,'<') : cs)   = tag (dropSpace cs) -- we are being nice here
+tokens' [] = []
+tokens' cs@((l,_):_) = let (as,bs) = breakn ('<' ==) cs
+                       in TokText CData { cdLine = Just l,
+                                          cdVerbatim = False,
+                                          cdData = decode as } : tokens' bs
+
+special :: LChar -> LString -> [Token]
+special _ ((_,'-') : (_,'-') : cs) = skip cs
+  where skip ((_,'-') : (_,'-') : (_,'>') : ds) = tokens' ds
         skip (_ : ds) = skip ds
-        skip [] = []
+        skip [] = [] -- unterminated comment
 
-special ('[' : 'C' : 'D' : 'A' : 'T' : 'A' : '[' : cs) =
+special c ((_,'[') : (_,'C') : (_,'D') : (_,'A') : (_,'T') : (_,'A') : (_,'[')
+         : cs) =
   let (xs,ts) = cdata cs
-  in TokText (CData True xs) : tokens ts
-  where cdata (']' : ']' : '>' : ds) = ([],ds)
-        cdata (d : ds)  = let (xs,ys) = cdata ds in (d:xs,ys)
+  in TokText CData { cdLine = Just (fst c), cdVerbatim = True, cdData = xs }
+                                                                  : tokens' ts
+  where cdata ((_,']') : (_,']') : (_,'>') : ds) = ([],ds)
+        cdata ((_,d) : ds)  = let (xs,ys) = cdata ds in (d:xs,ys)
         cdata []        = ([],[])
 
-special cs = tag ('!' : cs)
+special c cs = tag (c : cs) -- invalid specials are processed as tags
 
 
-qualName           :: String -> (QName,String)
-qualName xs         = let (as,bs) = break endName xs
+qualName           :: LString -> (QName,LString)
+qualName xs         = let (as,bs) = breakn endName xs
                           (q,n)   = case break (':'==) as of
                                       (q1,_:n1) -> (Just q1, n1)
                                       _         -> (Nothing, as)
@@ -134,63 +143,69 @@ qualName xs         = let (as,bs) = break endName xs
 
 
 
-tag              :: String -> [Token]
-tag ('/' : cs)    = let (n,ds) = qualName (dropWhile isSpace cs)
-                    in TokEnd n : case ds of
-                                    '>' : es -> tokens es
-                                    -- tag was not properly closed...
-                                    _        -> tokens ds
+tag              :: LString -> [Token]
+tag ((p,'/') : cs)    = let (n,ds) = qualName (dropSpace cs)
+                        in TokEnd p n : case ds of
+                                          (_,'>') : es -> tokens' es
+                                          -- tag was not properly closed...
+                                          _        -> tokens' ds
 tag []            = []
 tag cs            = let (n,ds)  = qualName cs
-                        (as,b,ts) = attribs (dropWhile isSpace ds)
-                    in TokStart n as b : ts
+                        (as,b,ts) = attribs (dropSpace ds)
+                    in TokStart (fst (head cs)) n as b : ts
 
-attribs          :: String -> ([Attr], Bool, [Token])
+attribs          :: LString -> ([Attr], Bool, [Token])
 attribs cs        = case cs of
-                      '>' : ds -> ([], False, tokens ds)
+                      (_,'>') : ds -> ([], False, tokens' ds)
 
-                      '/' : ds -> ([], True, case ds of
-                                              '>' : es -> tokens es
+                      (_,'/') : ds -> ([], True, case ds of
+                                              (_,'>') : es -> tokens' es
                                               -- insert missing >  ...
-                                              _ -> tokens ds)
+                                              _ -> tokens' ds)
 
-                      '?' : '>' : ds -> ([], False, tokens ds)
+                      (_,'?') : (_,'>') : ds -> ([], False, tokens' ds)
 
                       -- doc ended within a tag..
                       []       -> ([],False,[])
 
-                      _        -> let (a,cs1) = attrib cs 
+                      _        -> let (a,cs1) = attrib cs
                                       (as,b,ts) = attribs cs1
                                   in (a:as,b,ts)
 
-attrib             :: String -> (Attr,String)
+attrib             :: LString -> (Attr,LString)
 attrib cs           = let (ks,cs1)  = qualName cs
-                          (vs,cs2)  = attr_val (dropWhile isSpace cs1)
-                      in ((Attr ks (decode vs)),dropWhile isSpace cs2)
+                          (vs,cs2)  = attr_val (dropSpace cs1)
+                      in ((Attr ks (decode vs)),dropSpace cs2)
 
-attr_val            :: String -> (String,String)
-attr_val ('=' : cs) = string (dropWhile isSpace cs)
+attr_val           :: LString -> (String,LString)
+attr_val ((_,'=') : cs) = string (dropSpace cs)
 attr_val cs         = ("",cs)
 
 
+dropSpace :: LString -> LString
+dropSpace = dropWhile (isSpace . snd)
+
 -- | Match the value for an attribute.  For malformed XML we do
 -- our best to guess the programmer's intention.
-string             :: String -> (String,String)
-string ('"' : cs)   = break' ('"' ==) cs
+string             :: LString -> (String,LString)
+string ((_,'"') : cs)   = break' ('"' ==) cs
 
 -- Allow attributes to be enclosed between ' '.
-string ('\'' : cs)  = break' ('\'' ==) cs
+string ((_,'\'') : cs)  = break' ('\'' ==) cs
 
 -- Allow attributes that are not enclosed by anything.
-string cs           = break eos cs
+string cs           = breakn eos cs
   where eos x = isSpace x || x == '>' || x == '/'
 
 
-break' :: (a -> Bool) -> [a] -> ([a],[a])
-break' p xs         = let (as,bs) = break p xs
+break' :: (a -> Bool) -> [(b,a)] -> ([a],[(b,a)])
+break' p xs         = let (as,bs) = breakn p xs
                       in (as, case bs of
                                 [] -> []
                                 _ : cs -> cs)
+
+breakn :: (a -> Bool) -> [(b,a)] -> ([a],[(b,a)])
+breakn p l = (map snd as,bs) where (as,bs) = break (p . snd) l
 
 decode :: String -> String
 decode ('&' : 'l' : 't' : ';' : cs)             = '<'   : decode cs
@@ -200,7 +215,7 @@ decode ('&' : 'a' : 'p' : 'o' : 's' : ';' : cs) = '\''  : decode cs
 decode ('&' : 'q' : 'u' : 'o' : 't' : ';' : cs) = '"'   : decode cs
 decode ('&' : '#' : cs) = case char_num cs of
                             Just (c,ds) -> c : decode ds
-                            _ -> '&' : '#' : decode cs
+                            _ -> '&' : '#' : decode cs  -- Invalid escape.
 decode (c : cs)                                 = c     : decode cs
 decode []                                       = []
 
@@ -226,3 +241,7 @@ preprocess ('\r' : cs)        = '\n' : preprocess cs
 preprocess (c : cs)           = c : preprocess cs
 preprocess []                 = []
 
+linenumber :: Line -> String -> LString
+linenumber _ [] = []
+linenumber n ('\n':s) = n' `seq` ((n,'\n'):linenumber n' s) where n' = n + 1
+linenumber n (c:s)    = (n,c) : linenumber n s
