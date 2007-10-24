@@ -1,5 +1,5 @@
 Name:            xml
-Version:         1.0
+Version:         1.0.1
 Build-depends:   base
 Description:     A simple XML library.
 Ghc-options:     -Wall -O2
