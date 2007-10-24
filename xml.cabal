@@ -3,6 +3,7 @@ Version:         1.0.1
 Build-depends:   base
 Synopsis:        A simple XML library.
 Description:     A simple XML library.
+Category:        XML
 Maintainer:      Docserver Team + volunteers
 Homepage:        http://docserver.galois.com
 Ghc-options:     -Wall -O2
