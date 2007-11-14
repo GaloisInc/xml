@@ -2,7 +2,7 @@ module XML.Output
   ( showTopElement, showContent, showElement, showCData, showQName, showAttr
   , ppTopElement, ppContent, ppElement
   , dumpContent, dumpElement
-  , tagEnd
+  , tagEnd, xml_header
   ) where
 
 import Data.Char
