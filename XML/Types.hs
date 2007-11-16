@@ -43,8 +43,6 @@ instance Ord QName where
                (u1,u2)           -> compare u1 u2
       x   -> x
 
-unqual :: String -> QName
-unqual x = blank_name { qName = x }
 
 -- blank elements --------------------------------------------------------------
 

@@ -22,8 +22,13 @@ onlyElems xs        = [ x | Elem x <- xs ]
 onlyText           :: [Content] -> [CData]
 onlyText xs         = [ x | Text x <- xs ]
 
+-- | Find all immediate children with the given name.
+findChildren       :: QName -> Element -> [Element]
+findChildren q e    = filter ((q ==) . elName) (onlyElems (elChildren e))
+
+-- | Find an immediate child with the given name.
 findChild          :: QName -> Element -> Maybe Element
-findChild q e       = find ((q ==) . elName) (onlyElems (elChildren e))
+findChild q e       = listToMaybe (findChildren q e)
 
 -- | Find the left-most occurance of an element.
 findElement        :: QName -> Element -> Maybe Element
@@ -38,4 +43,7 @@ findElements qn e
  | otherwise      = concatMap (findElements qn)
                   $ onlyElems $ elChildren e
 
+-- | Lookup the value of an attribute.
+findAttr           :: QName -> Element -> Maybe String
+findAttr x e        = attrVal `fmap` find ((x ==) . attrKey) (elAttribs e)
 
