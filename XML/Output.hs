@@ -32,7 +32,7 @@ ppContentS i x xs   = case x of
 ppElementS         :: String -> Element -> ShowS
 ppElementS i e xs   = i ++ (tagStart (elName e) (elAttribs e) $
   case elContent e of
-    Nothing -> "/>" ++ xs
+    Nothing -> " />" ++ xs
     Just [Text t] -> ">" ++ ppCData "" t (tagEnd (elName e) xs)
     Just cs -> ">\n" ++ foldr ppSub (i ++ tagEnd (elName e) xs) cs
       where ppSub e1 = ppContentS ("  " ++ i) e1 . showChar '\n'
@@ -114,7 +114,7 @@ showElementS e xs =
   tagStart (elName e) (elAttribs e)
     $ case elContent e of
         Just ch -> '>' : foldr showContentS (tagEnd (elName e) xs) ch
-        Nothing -> "/>" ++ xs
+        Nothing -> " />" ++ xs
 
 -- | Convert a text element to characters.
 showCDataS         :: CData -> ShowS
