@@ -28,6 +28,7 @@ ppContentS         :: String -> Content -> ShowS
 ppContentS i x xs   = case x of
                         Elem e -> ppElementS i e xs
                         Text c -> ppCData i c xs
+                        CRef r -> showCRefS r xs
 
 ppElementS         :: String -> Element -> ShowS
 ppElementS i e xs   = i ++ (tagStart (elName e) (elAttribs e) $
@@ -62,10 +63,11 @@ dumpContentS       :: Int -> Content -> ShowS
 dumpContentS n e xs = case e of
                         Elem e1 -> dumpElementS n e1 xs
                         Text c  -> dumpCData n c xs
+                        CRef r  -> showCRefS r xs
 
 dumpElementS       :: Int -> Element -> ShowS
 dumpElementS n e xs = indent ++
-  case elContent e of 
+  case elContent e of
     Just cs -> tagStart (elName e) (elAttribs e) $    -- don't esc attrs?
               ">\n" ++ foldr shSub (indent ++ tagEnd (elName e) xs) cs
       where shSub e1 = dumpContentS (n+1) e1 . showChar '\n'
@@ -103,10 +105,15 @@ showElement c       = showElementS c ""
 showCData          :: CData -> String
 showCData c         = showCDataS c ""
 
+-- Note: crefs should not contain '&', ';', etc.
+showCRefS          :: String -> ShowS
+showCRefS r xs      = '&' : r ++ xs
+
 -- | Good for transmition (no extra white space etc.) but less readable.
 showContentS           :: Content -> ShowS
 showContentS (Elem e)   = showElementS e
 showContentS (Text cs)  = showCDataS cs
+showContentS (CRef cs)  = showCRefS cs
 
 -- | Good for transmition (no extra white space etc.) but less readable.
 showElementS       :: Element -> ShowS

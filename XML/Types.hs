@@ -5,6 +5,7 @@ type Line     = Integer
 
 data Content  = Elem Element
               | Text CData
+              | CRef String
                 deriving Show
 
 data Element  = Element {
