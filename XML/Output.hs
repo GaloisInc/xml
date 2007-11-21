@@ -107,7 +107,7 @@ showCData c         = showCDataS c ""
 
 -- Note: crefs should not contain '&', ';', etc.
 showCRefS          :: String -> ShowS
-showCRefS r xs      = '&' : r ++ xs
+showCRefS r xs      = '&' : r ++ ';' : xs
 
 -- | Good for transmition (no extra white space etc.) but less readable.
 showContentS           :: Content -> ShowS
