@@ -18,7 +18,7 @@ data Element  = Element {
 data Attr     = Attr {
                   attrKey :: QName,
                   attrVal :: String
-                } deriving (Eq,Show)
+                } deriving (Eq,Ord,Show)
 
 data CData    = CData {
                   cdVerbatim  :: Bool,
