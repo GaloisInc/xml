@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+<title>Portland, OR Weather from Weather Underground</title>
+	<link>http://www.wunderground.com/</link>
+	<description>Weather Underground RSS Feed for Portland, OR US</description>
+	<language>EN</language>
+        <generator>WU-RSS</generator>
+        <webMaster>aaron@wunderground.com</webMaster>
+	<category>weather</category>
+        <image>
+                <url>http://icons.wunderground.com/graphics/smash/wunderTransparent.gif</url>
+                <link>http://www.wunderground.com/</link>
+                <title>Weather Underground</title>     
+        </image>
+        <pubDate>Sat, 1 Dec 2007 17:26:00 PST</pubDate>
+        <lastBuildDate>Sat, 1 Dec 2007 17:26:00 PST</lastBuildDate>
+	<ttl>5</ttl>
+<item>
+<guid isPermaLink="false">1196558805</guid>
+<title>Current Conditions - 39.9F / 4.4C | Light Rain - 5:26 PM PST Dec. 1</title>
+<link>http://www.wunderground.com/US/OR/Portland.html</link>
+	<description><![CDATA[Temperature: 39.9&#176;F / 4.4&#176;C | Humidity: 89% | Pressure: 29.60in / 1002.3hPa | Conditions: Light Rain | Wind Direction: South | Wind Speed: 8.3mph / 13.4km/h<img src="http://server.as5000.com/AS5000/adserver/image?ID=WUND-00049&C=0" width="0" height="0" border="0"/>]]>
+	</description>
+        <pubDate>Sat, 1 Dec 2007 17:26:00 PST</pubDate>
+</item>
+
+<item>
+<title>Tonight as of Dec. 1 3:15 PM PST</title>
+<link>http://www.wunderground.com/US/OR/Portland.html</link>    
+      <description>
+	Tonight - Rain and snow in the evening...then rain after midnight. Breezy. Snow level 1200 feet in the evening. Snow accumulation up to 1 to 3 inches mainly above 500 to 1000 feet near The Gorge. Lows around 35. Southeast wind 15 to 25 mph.	
+      </description>
+      <pubDate>Sat, 01 Dec 2007 15:15:00 PST</pubDate>
+      <guid isPermaLink="false">1196550900-1</guid>
+</item>
+<item>
+<title>Sunday as of Dec. 1 3:15 PM PST</title>
+<link>http://www.wunderground.com/US/OR/Portland.html</link>    
+      <description>
+	Sunday - Rain...windy. Not as cool. Snow level 1200 feet in the morning. Light snow accumulation. Highs 45 to 50. South wind increasing to 20 to 30 mph. Gusts to 50 mph in the afternoon.	
+      </description>
+      <pubDate>Sat, 01 Dec 2007 15:15:00 PST</pubDate>
+      <guid isPermaLink="false">1196550900-2</guid>
+</item>
+<item>
+<title>Sunday Night as of Dec. 1 3:15 PM PST</title>
+<link>http://www.wunderground.com/US/OR/Portland.html</link>    
+      <description>
+	Sunday Night - Rain...windy. Lows around 45. Southeast wind 15 to 30 mph.	
+      </description>
+      <pubDate>Sat, 01 Dec 2007 15:15:00 PST</pubDate>
+      <guid isPermaLink="false">1196550900-3</guid>
+</item>
+
+
+
+
+
+
+
+
+
+
+
+
+<item>
+<guid isPermaLink="false">1196546580WIN</guid>
+<title>Snow Advisory - Expires: 8:00 PM PST</title>
+<link>http://www.wunderground.com/US/OR/Portland.html#WIN</link>
+	<description><![CDATA[Snow Advisory for Clackamas County in effect until 8:00 PM PST on December 01, 2007]]>
+	</description>
+        <pubDate>Sat, 1 Dec 2007 14:03:00 PST</pubDate>
+</item><item>
+<guid isPermaLink="false">1196544420WND</guid>
+<title>Wind Advisory - Expires: 10:00 PM PST</title>
+<link>http://www.wunderground.com/US/OR/Portland.html#WND</link>
+	<description><![CDATA[Wind Advisory for Clackamas County in effect until 10:00 PM PST on December 03, 2007]]>
+	</description>
+        <pubDate>Sat, 1 Dec 2007 13:27:00 PST</pubDate>
+</item>
+
+
+</channel>
+
+</rss>
