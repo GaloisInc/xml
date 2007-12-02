@@ -1,10 +1,14 @@
 Name:            xml
 Version:         1.1.4
-Build-depends:   base
+Category:        Text, XML
 Synopsis:        A simple XML library.
 Description:     A simple XML library.
-Category:        XML
-Maintainer:      Docserver Team + volunteers
+License:         BSD3
+License-File:    LICENSE
+Author:		 Galois Inc.
+Maintainer:      Docserver Team + Volunteers
+Copyright:       (c) 2007 Galois Inc.
 Homepage:        http://docserver.galois.com
+Build-depends:   base
 Ghc-options:     -Wall -O2
 Exposed-modules: XML, XML.Types, XML.Output, XML.Input, XML.Proc
