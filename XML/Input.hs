@@ -32,6 +32,10 @@ type NSInfo = ([(String,String)],Maybe String)
 
 nodes :: NSInfo -> [QName] -> [Token] -> ([Content], [QName], [Token])
 
+nodes ns ps (TokCRef ref : ts) =
+  let (es,qs,ts1) = nodes ns ps ts
+  in (CRef ref : es, qs, ts1)
+
 nodes ns ps (TokText txt : ts) =
   let (es,qs,ts1) = nodes ns ps ts
       (more,es1)  = case es of
@@ -97,6 +101,7 @@ type LChar              = (Line,Char)
 type LString            = [LChar]
 data Token              = TokStart Line QName [Attr] Bool  -- is empty?
                         | TokEnd Line QName
+                        | TokCRef String
                         | TokText CData
                           deriving Show
 
@@ -109,9 +114,20 @@ tokens' ((_,'<') : c@(_,'!') : cs) = special c cs
 tokens' ((_,'<') : cs)   = tag (dropSpace cs) -- we are being nice here
 tokens' [] = []
 tokens' cs@((l,_):_) = let (as,bs) = breakn ('<' ==) cs
-                       in TokText CData { cdLine = Just l,
-                                          cdVerbatim = False,
-                                          cdData = decode as } : tokens' bs
+                       in map cvt (decode_text as) ++ tokens' bs
+
+  -- XXX: Note, some of the lines might be a bit inacuarate
+  where cvt (TxtBit x)  = TokText CData { cdLine = Just l
+                                        , cdVerbatim = False
+                                        , cdData = x
+                                        }
+        cvt (CRefBit x) = case cref_to_char x of
+                            Just c -> TokText CData { cdLine = Just l
+                                                    , cdVerbatim = False
+                                                    , cdData = [c]
+                                                    }
+                            Nothing -> TokCRef x
+
 
 special :: LChar -> LString -> [Token]
 special _ ((_,'-') : (_,'-') : cs) = skip cs
@@ -175,7 +191,7 @@ attribs cs        = case cs of
 attrib             :: LString -> (Attr,LString)
 attrib cs           = let (ks,cs1)  = qualName cs
                           (vs,cs2)  = attr_val (dropSpace cs1)
-                      in ((Attr ks (decode vs)),dropSpace cs2)
+                      in ((Attr ks (decode_attr vs)),dropSpace cs2)
 
 attr_val           :: LString -> (String,LString)
 attr_val ((_,'=') : cs) = string (dropSpace cs)
@@ -207,33 +223,48 @@ break' p xs         = let (as,bs) = breakn p xs
 breakn :: (a -> Bool) -> [(b,a)] -> ([a],[(b,a)])
 breakn p l = (map snd as,bs) where (as,bs) = break (p . snd) l
 
-decode :: String -> String
-decode ('&' : 'l' : 't' : ';' : cs)             = '<'   : decode cs
-decode ('&' : 'g' : 't' : ';' : cs)             = '>'   : decode cs
-decode ('&' : 'a' : 'm' : 'p' : ';' : cs)       = '&'   : decode cs
-decode ('&' : 'a' : 'p' : 'o' : 's' : ';' : cs) = '\''  : decode cs
-decode ('&' : 'q' : 'u' : 'o' : 't' : ';' : cs) = '"'   : decode cs
-decode ('&' : '#' : cs) = case char_num cs of
-                            Just (c,ds) -> c : decode ds
-                            _ -> '&' : '#' : decode cs  -- Invalid escape.
-decode (c : cs)                                 = c     : decode cs
-decode []                                       = []
 
-char_num :: String -> Maybe (Char,String)
-char_num cs = case cs of
-                'x' : ds -> next (readHex ds)
-                _        -> next (reads cs)
-  where
-  next [(n,';':ds)] = do c <- cvt_char n
-                         return (c,ds)
-  next _            = Nothing
 
-  cvt_char :: Int -> Maybe Char
-  cvt_char x
-    | fromEnum (minBound :: Char) <= x && x <= fromEnum (maxBound::Char)
+decode_attr :: String -> String
+decode_attr cs = concatMap cvt (decode_text cs)
+  where cvt (TxtBit x) = x
+        cvt (CRefBit x) = case cref_to_char x of
+                            Just c -> [c]
+                            Nothing -> '&' : x ++ ";"
+
+data Txt = TxtBit String | CRefBit String deriving Show
+
+decode_text :: [Char] -> [Txt]
+decode_text xs@('&' : cs) = case break (';' ==) cs of
+                              (as,_:bs) -> CRefBit as : decode_text bs
+                              _ -> [TxtBit xs]
+decode_text []  = []
+decode_text cs  = let (as,bs) = break ('&' ==) cs
+                  in TxtBit as : decode_text bs
+
+cref_to_char :: [Char] -> Maybe Char
+cref_to_char cs = case cs of
+  '#' : ds  -> num_esc ds
+  "lt"      -> Just '<'
+  "gt"      -> Just '>'
+  "amp"     -> Just '&'
+  "apos"    -> Just '\''
+  "quot"    -> Just '"'
+  _         -> Nothing
+
+num_esc :: String -> Maybe Char
+num_esc cs = case cs of
+               'x' : ds -> check (readHex ds)
+               _        -> check (reads cs)
+
+  where check [(n,"")]  = cvt_char n
+        check _         = Nothing
+
+cvt_char :: Int -> Maybe Char
+cvt_char x
+  | fromEnum (minBound :: Char) <= x && x <= fromEnum (maxBound::Char)
                 = Just (toEnum x)
-    | otherwise = Nothing
-
+  | otherwise = Nothing
 
 preprocess :: String -> String
 preprocess ('\r' : '\n' : cs) = '\n' : preprocess cs
