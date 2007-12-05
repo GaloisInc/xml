@@ -146,7 +146,7 @@ escChar c = case c of
   '\''  -> showString "&apos;"
   -- XXX: Is this really wortherd?
   -- We could deal with these issues when we convert characters to bytes.
-  _ | (oc <= 0x7f && isPrint c) || c == '\n' -> showChar c
+  _ | (oc <= 0x7f && isPrint c) || c == '\n' || c == '\r' -> showChar c
     | otherwise -> showString "&#" . shows oc . showChar ';'
       where oc = ord c
 
