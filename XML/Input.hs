@@ -1,4 +1,4 @@
-module XML.Input (parseXML,parseXMLDoc,tokens) where
+module XML.Input (parseXML,parseXMLDoc) where
 
 import XML.Types
 import XML.Proc
