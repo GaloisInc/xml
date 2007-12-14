@@ -6,6 +6,10 @@ import XML.Input as X
 import XML.Output as X
 
 
+-- | Add an attribute to an element.
+add_attr :: Attr -> Element -> Element
+add_attr a e = add_attrs [a] e
+
 -- | Add some attributes to an element.
 add_attrs :: [Attr] -> Element -> Element
 add_attrs as e = e { elAttribs = as ++ elAttribs e }
