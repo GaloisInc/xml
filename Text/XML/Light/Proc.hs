@@ -1,6 +1,20 @@
-module XML.Proc where
+--------------------------------------------------------------------
+-- |
+-- Module    : 
+-- Copyright : (c) Galois, Inc. 2007
+-- License   : BSD3
+--
+-- Maintainer: Don Stewart <dons@galois.com>
+-- Stability : provisional
+-- Portability:
+--
+--------------------------------------------------------------------
 
-import XML.Types
+
+module Text.XML.Light.Proc where
+
+import Text.XML.Light.Types
+
 import Data.Maybe(listToMaybe,fromMaybe)
 import Data.List(find)
 

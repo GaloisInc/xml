@@ -1,29 +1,45 @@
-module XML.Output
+--------------------------------------------------------------------
+-- |
+-- Module    : Text.XML.Light.Output
+-- Copyright : (c) Galois, Inc. 2007
+-- License   : BSD3
+--
+-- Maintainer: Don Stewart <dons@galois.com>
+-- Stability : provisional
+-- Portability:
+--
+-- Output handling for the lightweight XML lib.
+--
+
+module Text.XML.Light.Output
   ( showTopElement, showContent, showElement, showCData, showQName, showAttr
   , ppTopElement, ppContent, ppElement
   , dumpContent, dumpElement
   , tagEnd, xml_header
   ) where
 
+import Text.XML.Light.Types
 import Data.Char
-import XML.Types
 
+-- | The XML 1.0 header
 xml_header :: String
 xml_header = "<?xml version='1.0' ?>"
 
--- Pretty preting renders XML documents faithfully,
--- with the exception that whietspace may be added/removed
+-- | Pretty printing renders XML documents faithfully,
+-- with the exception that whitespace may be added/removed
 -- in non-verbatim character data.
-
 ppTopElement       :: Element -> String
 ppTopElement e      = unlines [xml_header,ppElement e]
 
+-- | Pretty printing elements
 ppElement          :: Element -> String
 ppElement e         = ppElementS "" e ""
 
+-- | Pretty printing content
 ppContent          :: Content -> String
 ppContent x         = ppContentS "" x ""
 
+-- | Pretty printing content using ShowS
 ppContentS         :: String -> Content -> ShowS
 ppContentS i x xs   = case x of
                         Elem e -> ppElementS i e xs
@@ -51,9 +67,12 @@ ppCData i c xs      = i ++ if cdVerbatim c
 
 
 --------------------------------------------------------------------------------
+
+-- | Rendering content
 dumpContent        :: Content -> String
 dumpContent c       = dumpContentS 1 c ""
 
+-- | Rendering elements
 dumpElement        :: Element -> String
 dumpElement c       = dumpElementS 1 c ""
 

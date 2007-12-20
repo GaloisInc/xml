@@ -1,13 +1,28 @@
-module XML.Types where
+--------------------------------------------------------------------
+-- |
+-- Module    : Text.XML.Light.Types
+-- Copyright : (c) Galois, Inc. 2007
+-- License   : BSD3
+--
+-- Maintainer: Don Stewart <dons@galois.com>
+-- Stability : provisional
+-- Portability:
+--
+-- Basic XML types.
+--
 
+module Text.XML.Light.Types where
 
+-- | A line is an Integer
 type Line     = Integer
 
+-- | XML content 
 data Content  = Elem Element
               | Text CData
               | CRef String
                 deriving Show
 
+-- | XML elements
 data Element  = Element {
                   elName      :: QName,
                   elAttribs   :: [Attr],
@@ -15,17 +30,20 @@ data Element  = Element {
                   elLine      :: Maybe Line
                 } deriving Show
 
+-- | XML attributes
 data Attr     = Attr {
                   attrKey :: QName,
                   attrVal :: String
                 } deriving (Eq,Ord,Show)
 
+-- | XML CData
 data CData    = CData {
                   cdVerbatim  :: Bool,
                   cdData      :: String,
                   cdLine      :: Maybe Line
                 } deriving Show
 
+-- | XML qualified names
 data QName    = QName {
                   qName   :: String,
                   qURI    :: Maybe String,
@@ -47,12 +65,15 @@ instance Ord QName where
 
 -- blank elements --------------------------------------------------------------
 
+-- | Blank names
 blank_name :: QName
 blank_name = QName { qName = "", qURI = Nothing, qPrefix = Nothing }
 
+-- | Blank cdata
 blank_cdata :: CData
 blank_cdata = CData { cdVerbatim = False, cdData = "", cdLine = Nothing }
 
+-- | Blank elements
 blank_element :: Element
 blank_element = Element
                   { elName    = blank_name

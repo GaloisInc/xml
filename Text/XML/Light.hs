@@ -1,10 +1,25 @@
-module XML (module XML, module X) where
+--------------------------------------------------------------------
+-- |
+-- Module    : Text.XML.Light
+-- Copyright : (c) Galois, Inc. 2007
+-- License   : BSD3
+--
+-- Maintainer: Don Stewart <dons@galois.com>
+-- Stability : provisional
+-- Portability: portability
+--
+-- A lightweight XML parsing, filtering and generating library.
+--
 
-import XML.Types as X
-import XML.Proc as X
-import XML.Input as X
-import XML.Output as X
+module Text.XML.Light (
+    module Text.XML.Light,
+    module X
+  ) where
 
+import Text.XML.Light.Types     as X
+import Text.XML.Light.Proc      as X
+import Text.XML.Light.Input     as X
+import Text.XML.Light.Output    as X
 
 -- | Add an attribute to an element.
 add_attr :: Attr -> Element -> Element

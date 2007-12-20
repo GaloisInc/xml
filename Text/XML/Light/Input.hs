@@ -1,13 +1,27 @@
-module XML.Input (parseXML,parseXMLDoc) where
+--------------------------------------------------------------------
+-- |
+-- Module    : Text.XML.Light.Input
+-- Copyright : (c) Galois, Inc. 2007
+-- License   : BSD3
+--
+-- Maintainer: Don Stewart <dons@galois.com>
+-- Stability : provisional
+-- Portability: portable
+--
+-- Lightweight XML parsing
+--
 
-import XML.Types
-import XML.Proc
-import XML.Output(tagEnd)
+module Text.XML.Light.Input (parseXML,parseXMLDoc) where
+
+import Text.XML.Light.Types
+import Text.XML.Light.Proc
+import Text.XML.Light.Output(tagEnd)
 
 import Data.Char(isSpace)
 import Data.List(isPrefixOf)
 import Numeric(readHex)
 
+-- | parseXMLDoc, parse a XMLl document to maybe an element
 parseXMLDoc  :: String -> Maybe Element
 parseXMLDoc xs  = strip (parseXML xs)
   where strip cs = case onlyElems cs of
@@ -17,8 +31,11 @@ parseXMLDoc xs  = strip (parseXML xs)
                       | otherwise -> Just e
                     _ -> Nothing
 
+-- | parseXML to a list of content chunks
 parseXML   :: String -> [Content]
 parseXML xs = parse $ tokens $ preprocess xs
+
+------------------------------------------------------------------------
 
 parse      :: [Token] -> [Content]
 parse []    = []
