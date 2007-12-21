@@ -48,8 +48,7 @@ ppContentS i x xs   = case x of
 ppElementS         :: String -> Element -> ShowS
 ppElementS i e xs   = i ++ (tagStart (elName e) (elAttribs e) $
   case elContent e of
-    [] | elShort e -> " />" ++ xs
-       | otherwise -> '>' : tagEnd (elName e) xs
+    [] -> " />" ++ xs
     [Text t] -> ">" ++ ppCData "" t (tagEnd (elName e) xs)
     cs -> ">\n" ++ foldr ppSub (i ++ tagEnd (elName e) xs) cs
       where ppSub e1 = ppContentS ("  " ++ i) e1 . showChar '\n'
@@ -71,8 +70,8 @@ ppCData i c xs      = i ++ if cdVerbatim c
 showTopElement     :: Element -> String
 showTopElement c    = xml_header ++ showElement c
 
-showContent            :: Content -> String
-showContent c           = showContentS c ""
+showContent        :: Content -> String
+showContent c       = showContentS c ""
 
 showElement        :: Element -> String
 showElement c       = showElementS c ""
@@ -95,7 +94,7 @@ showElementS       :: Element -> ShowS
 showElementS e xs =
   tagStart (elName e) (elAttribs e)
     $ case elContent e of
-        [] | elShort e -> " />" ++ xs
+        [] -> " />" ++ xs
         ch -> '>' : foldr showContentS (tagEnd (elName e) xs) ch
 
 -- | Convert a text element to characters.

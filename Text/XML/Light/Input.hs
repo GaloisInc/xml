@@ -70,13 +70,12 @@ nodes cur_info ps (TokStart p t as empty : ts) = (node : siblings, open, toks)
                            , elName    = new_name
                            , elAttribs = map (annotAttr new_info) as
                            , elContent = children
-                           , elShort   = short
                            }
 
-  (children,short,(siblings,open,toks))
-    | empty     = ([], True, nodes cur_info ps ts)
+  (children,(siblings,open,toks))
+    | empty     = ([], nodes cur_info ps ts)
     | otherwise = let (es1,qs1,ts1) = nodes new_info (new_name:ps) ts
-                  in (es1, False,
+                  in (es1,
                       case qs1 of
                         [] -> nodes cur_info ps ts1
                         _ : qs3 -> ([],qs3,ts1))

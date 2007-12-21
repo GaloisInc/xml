@@ -27,7 +27,6 @@ data Element  = Element {
                   elName      :: QName,
                   elAttribs   :: [Attr],
                   elContent   :: [Content],
-                  elShort     :: Bool,        -- ^ Use short tags for empty
                   elLine      :: Maybe Line
                 } deriving Show
 
@@ -80,7 +79,6 @@ blank_element = Element
                   { elName    = blank_name
                   , elAttribs = []
                   , elContent = []
-                  , elShort   = True
                   , elLine    = Nothing
                   }
 
