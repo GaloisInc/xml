@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 --------------------------------------------------------------------
 -- |
 -- Module    : Text.XML.Light
@@ -33,16 +34,49 @@ add_attrs as e = e { elAttribs = as ++ elAttribs e }
 unqual :: String -> QName
 unqual x = blank_name { qName = x }
 
--- | Create a node with a single text node as a child.
-leaf :: QName -> String -> Element
-leaf x y  = blank_element { elName = x
-                          , elContent = [Text blank_cdata { cdData = y }]
-                          }
+-- | A smart element constructor which uses the type of its argument
+-- to determine what sort of element to make.
+class Node t where
+  node :: t -> Element
 
--- | Create a node whose children are all elements.
--- Uses empty elements if there are no children.
-node :: QName -> [Element] -> Element
-node x ys = blank_element { elName = x
-                          , elContent = map Elem ys
-                          }
+
+instance Node (QName,[Attr],[Content]) where
+  node (name,attrs,cont) = blank_element { elName     = name
+                                         , elAttribs  = attrs
+                                         , elContent  = cont
+                                         }
+
+instance Node (QName,[Attr])    where node (n,as) = node (n,as,[]::[Content])
+instance Node (QName,Attr)            where node (n,a)  = node (n,[a])
+instance Node QName                   where node n      = node (n,[]::[Attr])
+
+instance Node (QName,[Content])       where node (n,cs) = node (n,[]::[Attr],cs)
+instance Node (QName,Content)         where node (n,c)  = node (n,[c])
+instance Node (QName,[Attr],Content)  where node (n,as,c) = node (n,as,[c])
+instance Node (QName,Attr,Content)    where node (n,a,c)  = node (n,[a],[c])
+
+instance Node (QName,[Attr],[Element]) where
+  node (n,as,cs) = node (n,as,map Elem cs)
+
+instance Node (QName,[Attr],Element)  where node (n,as,c) = node (n,as,[c])
+instance Node (QName,Attr,Element)    where node (n,a,c)  = node (n,[a],c)
+instance Node (QName,[Element])       where node (n,es) = node (n,[]::[Attr],es)
+instance Node (QName,Element)         where node (n,e)  = node (n,[e])
+
+instance Node (QName,[Attr],[CData]) where
+  node (n,as,cs) = node (n,as,map Text cs)
+
+instance Node (QName,[Attr],CData)  where node (n,as,c) = node (n,as,[c])
+instance Node (QName,Attr,CData)    where node (n,a,c)  = node (n,[a],c)
+instance Node (QName,[CData])       where node (n,es)   = node (n,[]::[Attr],es)
+instance Node (QName,CData)         where node (n,e)    = node (n,[e])
+
+instance Node (QName,[Attr],String) where
+  node (n,as,t) = node (n,as,blank_cdata { cdData = t })
+
+instance Node (QName,Attr,String)   where node (n,a,t)  = node (n,[a],t)
+instance Node (QName,String)        where node (n,t)    = node (n,[]::[Attr],t)
+
+
+
 
