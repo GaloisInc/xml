@@ -16,7 +16,7 @@ module Text.XML.Light.Types where
 -- | A line is an Integer
 type Line     = Integer
 
--- | XML content 
+-- | XML content
 data Content  = Elem Element
               | Text CData
               | CRef String
@@ -26,7 +26,8 @@ data Content  = Elem Element
 data Element  = Element {
                   elName      :: QName,
                   elAttribs   :: [Attr],
-                  elContent   :: Maybe [Content],
+                  elContent   :: [Content],
+                  elShort     :: Bool,        -- ^ Use short tags for empty
                   elLine      :: Maybe Line
                 } deriving Show
 
@@ -78,7 +79,8 @@ blank_element :: Element
 blank_element = Element
                   { elName    = blank_name
                   , elAttribs = []
-                  , elContent = Nothing
+                  , elContent = []
+                  , elShort   = True
                   , elLine    = Nothing
                   }
 

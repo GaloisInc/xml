@@ -1,6 +1,6 @@
 --------------------------------------------------------------------
 -- |
--- Module    : 
+-- Module    : Text.XML.Light.Proc
 -- Copyright : (c) Galois, Inc. 2007
 -- License   : BSD3
 --
@@ -15,18 +15,13 @@ module Text.XML.Light.Proc where
 
 import Text.XML.Light.Types
 
-import Data.Maybe(listToMaybe,fromMaybe)
+import Data.Maybe(listToMaybe)
 import Data.List(find)
-
--- | Get a list of the children for an element.  We return the
--- empty list for elements that do not support children.
-elChildren         :: Element -> [Content]
-elChildren e        = fromMaybe [] (elContent e)
 
 -- | Get the text value of an XML element.  This function
 -- ignores non-text elements, and concatenates all text elements.
 strContent         :: Element -> String
-strContent e        = concatMap cdData $ onlyText $ elChildren e
+strContent e        = concatMap cdData $ onlyText $ elContent e
 
 -- | Select only the elements from a list of XML content.
 onlyElems          :: [Content] -> [Element]
@@ -38,7 +33,7 @@ onlyText xs         = [ x | Text x <- xs ]
 
 -- | Find all immediate children with the given name.
 findChildren       :: QName -> Element -> [Element]
-findChildren q e    = filter ((q ==) . elName) (onlyElems (elChildren e))
+findChildren q e    = filter ((q ==) . elName) (onlyElems (elContent e))
 
 -- | Find an immediate child with the given name.
 findChild          :: QName -> Element -> Maybe Element
@@ -55,7 +50,7 @@ findElements       :: QName -> Element -> [Element]
 findElements qn e
  | elName e == qn = [e]
  | otherwise      = concatMap (findElements qn)
-                  $ onlyElems $ elChildren e
+                  $ onlyElems $ elContent e
 
 -- | Lookup the value of an attribute.
 findAttr           :: QName -> Element -> Maybe String

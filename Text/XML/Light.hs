@@ -36,15 +36,13 @@ unqual x = blank_name { qName = x }
 -- | Create a node with a single text node as a child.
 leaf :: QName -> String -> Element
 leaf x y  = blank_element { elName = x
-                          , elContent = Just [Text blank_cdata { cdData = y }]
+                          , elContent = [Text blank_cdata { cdData = y }]
                           }
 
 -- | Create a node whose children are all elements.
--- Uses empy elements if there are no children.
+-- Uses empty elements if there are no children.
 node :: QName -> [Element] -> Element
 node x ys = blank_element { elName = x
-                          , elContent = case ys of
-                                          [] -> Nothing
-                                          _  -> Just (map Elem ys)
+                          , elContent = map Elem ys
                           }
 

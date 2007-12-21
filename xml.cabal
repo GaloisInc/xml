@@ -1,12 +1,12 @@
 Name:            xml
-Version:         1.2.0
+Version:         1.2.1
 Homepage:        http://docserver.galois.com
 Synopsis:        A simple XML library.
 Description:     A simple XML library.
 Category:        Text, XML
 License:         BSD3
 License-File:    LICENSE
-Author:		     Galois Inc.
+Author:          Galois Inc.
 Maintainer:      Docserver Team + Volunteers
 Copyright:       (c) 2007 Galois Inc.
 Build-depends:   base

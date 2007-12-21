@@ -14,7 +14,6 @@
 module Text.XML.Light.Output
   ( showTopElement, showContent, showElement, showCData, showQName, showAttr
   , ppTopElement, ppContent, ppElement
-  , dumpContent, dumpElement
   , tagEnd, xml_header
   ) where
 
@@ -49,9 +48,10 @@ ppContentS i x xs   = case x of
 ppElementS         :: String -> Element -> ShowS
 ppElementS i e xs   = i ++ (tagStart (elName e) (elAttribs e) $
   case elContent e of
-    Nothing -> " />" ++ xs
-    Just [Text t] -> ">" ++ ppCData "" t (tagEnd (elName e) xs)
-    Just cs -> ">\n" ++ foldr ppSub (i ++ tagEnd (elName e) xs) cs
+    [] | elShort e -> " />" ++ xs
+       | otherwise -> '>' : tagEnd (elName e) xs
+    [Text t] -> ">" ++ ppCData "" t (tagEnd (elName e) xs)
+    cs -> ">\n" ++ foldr ppSub (i ++ tagEnd (elName e) xs) cs
       where ppSub e1 = ppContentS ("  " ++ i) e1 . showChar '\n'
   )
 
@@ -63,50 +63,6 @@ ppCData i c xs      = i ++ if cdVerbatim c
   where cons         :: Char -> String -> String
         cons '\n' ys  = "\n" ++ i ++ ys
         cons y ys     = y : ys
-
-
-
---------------------------------------------------------------------------------
-
--- | Rendering content
-dumpContent        :: Content -> String
-dumpContent c       = dumpContentS 1 c ""
-
--- | Rendering elements
-dumpElement        :: Element -> String
-dumpElement c       = dumpElementS 1 c ""
-
--- | Show a tree view (adds white space).
--- The first argument is indentation.
-dumpContentS       :: Int -> Content -> ShowS
-dumpContentS n e xs = case e of
-                        Elem e1 -> dumpElementS n e1 xs
-                        Text c  -> dumpCData n c xs
-                        CRef r  -> showCRefS r xs
-
-dumpElementS       :: Int -> Element -> ShowS
-dumpElementS n e xs = indent ++
-  case elContent e of
-    Just cs -> tagStart (elName e) (elAttribs e) $    -- don't esc attrs?
-              ">\n" ++ foldr shSub (indent ++ tagEnd (elName e) xs) cs
-      where shSub e1 = dumpContentS (n+1) e1 . showChar '\n'
-    Nothing -> tagStart (elName e) (elAttribs e) ("/>\n" ++ xs)
-  where indent = indentElem n
-
-dumpCData          :: Int -> CData -> ShowS
-dumpCData n c xs    = indentElem n ++ foldr cons xs (cdData c)
-  where cons '\n' ys  = "\n" ++ indent ++ ys
-        cons y ys     = y : ys
-
-        indent        = indentCData n
-
-indentElem         :: Int -> String
-indentElem 0        = ""
-indentElem n        = concat (replicate (n-1) "| ") ++ "|-"
-
-indentCData        :: Int -> String
-indentCData 0       = ""
-indentCData n       = concat (replicate (n-1) "| ") ++ "|."
 
 
 
@@ -139,8 +95,8 @@ showElementS       :: Element -> ShowS
 showElementS e xs =
   tagStart (elName e) (elAttribs e)
     $ case elContent e of
-        Just ch -> '>' : foldr showContentS (tagEnd (elName e) xs) ch
-        Nothing -> " />" ++ xs
+        [] | elShort e -> " />" ++ xs
+        ch -> '>' : foldr showContentS (tagEnd (elName e) xs) ch
 
 -- | Convert a text element to characters.
 showCDataS         :: CData -> ShowS
