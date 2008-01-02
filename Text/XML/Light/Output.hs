@@ -25,7 +25,7 @@ xml_header :: String
 xml_header = "<?xml version='1.0' ?>"
 
 -- | Pretty printing renders XML documents faithfully,
--- with the exception that whitespace may be added/removed
+-- with the exception that whitespace may be added\/removed
 -- in non-verbatim character data.
 ppTopElement       :: Element -> String
 ppTopElement e      = unlines [xml_header,ppElement e]
