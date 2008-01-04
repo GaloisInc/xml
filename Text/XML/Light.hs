@@ -11,16 +11,31 @@
 --
 -- A lightweight XML parsing, filtering and generating library.
 --
+-- This module reexports functions from:
+--
+-- * "Text.XML.Light.Types"
+--
+-- * "Text.XML.Light.Proc"
+--
+-- * "Text.XML.Light.Input"
+--
+-- * "Text.XML.Light.Output"
+--
 
 module Text.XML.Light (
+
     module Text.XML.Light,
-    module X
+    module Text.XML.Light.Types,
+    module Text.XML.Light.Proc,
+    module Text.XML.Light.Input,
+    module Text.XML.Light.Output
+
   ) where
 
-import Text.XML.Light.Types     as X
-import Text.XML.Light.Proc      as X
-import Text.XML.Light.Input     as X
-import Text.XML.Light.Output    as X
+import Text.XML.Light.Types
+import Text.XML.Light.Proc
+import Text.XML.Light.Input
+import Text.XML.Light.Output
 
 -- | Add an attribute to an element.
 add_attr :: Attr -> Element -> Element
@@ -38,7 +53,6 @@ unqual x = blank_name { qName = x }
 -- to determine what sort of element to make.
 class Node t where
   node :: t -> Element
-
 
 instance Node (QName,[Attr],[Content]) where
   node (name,attrs,cont) = blank_element { elName     = name
@@ -76,7 +90,3 @@ instance Node (QName,[Attr],String) where
 
 instance Node (QName,Attr,String)   where node (n,a,t)  = node (n,[a],t)
 instance Node (QName,String)        where node (n,t)    = node (n,[]::[Attr],t)
-
-
-
-
