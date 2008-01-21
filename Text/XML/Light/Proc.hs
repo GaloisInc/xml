@@ -96,3 +96,8 @@ filterElementsName p e = filterElements (p.elName) e
 -- | Lookup the value of an attribute.
 findAttr           :: QName -> Element -> Maybe String
 findAttr x e        = attrVal `fmap` find ((x ==) . attrKey) (elAttribs e)
+
+-- | Lookup attribute name from list.
+lookupAttr           :: QName -> [Attr] -> Maybe String
+lookupAttr x as        = attrVal `fmap` find ((x ==) . attrKey) as
+
