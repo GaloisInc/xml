@@ -1,14 +1,14 @@
 Name:            xml
 Version:         1.2.6
-Homepage:        http://docserver.galois.com
+Homepage:        http://galois.com
 Synopsis:        A simple XML library.
 Description:     A simple XML library.
 Category:        Text, XML
 License:         BSD3
 License-File:    LICENSE
 Author:          Galois Inc.
-Maintainer:      Docserver Team + Volunteers
-Copyright:       (c) 2007 Galois Inc.
+Maintainer:      Galois Docserver Team + Volunteers
+Copyright:       (c) 2007-8 Galois Inc.
 Build-depends:   base
 Ghc-options:     -Wall -O2
 Exposed-modules: Text.XML.Light,
@@ -17,3 +17,4 @@ Exposed-modules: Text.XML.Light,
                  Text.XML.Light.Input,
                  Text.XML.Light.Proc
 Extensions:      FlexibleInstances
+Build-type:      Simple
