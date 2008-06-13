@@ -38,10 +38,16 @@ data Attr     = Attr {
 
 -- | XML CData
 data CData    = CData {
-                  cdVerbatim  :: Bool,
+                  cdVerbatim  :: CDataKind,
                   cdData      :: String,
                   cdLine      :: Maybe Line
                 } deriving Show
+
+data CDataKind
+ = CDataText      -- ^ Ordinary character data; pretty printer escapes &, < etc.
+ | CDataVerbatim  -- ^ Unescaped character data; pretty printer embeds it in <![CDATA[..
+ | CDataRaw       -- ^ As-is character data; pretty printer passes it along without any escaping or CDATA wrap-up.
+   deriving ( Eq, Show )
 
 -- | XML qualified names
 data QName    = QName {
@@ -71,7 +77,7 @@ blank_name = QName { qName = "", qURI = Nothing, qPrefix = Nothing }
 
 -- | Blank cdata
 blank_cdata :: CData
-blank_cdata = CData { cdVerbatim = False, cdData = "", cdLine = Nothing }
+blank_cdata = CData { cdVerbatim = CDataText, cdData = "", cdLine = Nothing }
 
 -- | Blank elements
 blank_element :: Element

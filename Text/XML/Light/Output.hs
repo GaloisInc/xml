@@ -19,6 +19,7 @@ module Text.XML.Light.Output
 
 import Text.XML.Light.Types
 import Data.Char
+import Data.List ( isPrefixOf )
 
 -- | The XML 1.0 header
 xml_header :: String
@@ -48,14 +49,16 @@ ppContentS i x xs   = case x of
 ppElementS         :: String -> Element -> ShowS
 ppElementS i e xs   = i ++ (tagStart (elName e) (elAttribs e) $
   case elContent e of
-    [] -> " />" ++ xs
+    [] 
+     | not ("?xml" `isPrefixOf` (qName $ elName e)) -> " />" ++ xs
+     | otherwise -> " ?>" ++ xs
     [Text t] -> ">" ++ ppCData "" t (tagEnd (elName e) xs)
     cs -> ">\n" ++ foldr ppSub (i ++ tagEnd (elName e) xs) cs
       where ppSub e1 = ppContentS ("  " ++ i) e1 . showChar '\n'
   )
 
 ppCData            :: String -> CData -> ShowS
-ppCData i c xs      = i ++ if cdVerbatim c
+ppCData i c xs      = i ++ if (cdVerbatim c /= CDataText )
                               then showCDataS c xs
                               else foldr cons xs (showCData c)
 
@@ -99,11 +102,11 @@ showElementS e xs =
 
 -- | Convert a text element to characters.
 showCDataS         :: CData -> ShowS
-showCDataS cd
- | cdVerbatim cd  = showString "<![CDATA[" . escCData (cdData cd)
-                  . showString "]]>"
- | otherwise      = escStr (cdData cd)
-
+showCDataS cd = 
+ case cdVerbatim cd of
+   CDataText     -> escStr (cdData cd)
+   CDataVerbatim -> showString "<![CDATA[" . escCData (cdData cd) . showString "]]>"
+   CDataRaw      -> \ xs -> cdData cd ++ xs
 
 --------------------------------------------------------------------------------
 escCData           :: String -> ShowS

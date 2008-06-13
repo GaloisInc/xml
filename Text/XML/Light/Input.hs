@@ -25,9 +25,9 @@ import Numeric(readHex)
 parseXMLDoc  :: String -> Maybe Element
 parseXMLDoc xs  = strip (parseXML xs)
   where strip cs = case onlyElems cs of
-                    e : _
+                    e : es
                       | "?xml" `isPrefixOf` qName (elName e)
-                          -> strip (elContent e)
+                          -> strip (map Elem es)
                       | otherwise -> Just e
                     _ -> Nothing
 
@@ -88,7 +88,7 @@ nodes ns ps (TokEnd p t : ts)   = let t1 = annotName ns t
                                     let (es,qs,ts1) = nodes ns ps ts
                                     in (Text CData {
                                                cdLine = Just p,
-                                               cdVerbatim = False,
+                                               cdVerbatim = CDataText,
                                                cdData = tagEnd t ""
                                               } : es,qs, ts1)
 
@@ -136,12 +136,12 @@ tokens' cs@((l,_):_) = let (as,bs) = breakn ('<' ==) cs
 
   -- XXX: Note, some of the lines might be a bit inacuarate
   where cvt (TxtBit x)  = TokText CData { cdLine = Just l
-                                        , cdVerbatim = False
+                                        , cdVerbatim = CDataText
                                         , cdData = x
                                         }
         cvt (CRefBit x) = case cref_to_char x of
                             Just c -> TokText CData { cdLine = Just l
-                                                    , cdVerbatim = False
+                                                    , cdVerbatim = CDataText
                                                     , cdData = [c]
                                                     }
                             Nothing -> TokCRef x
@@ -156,13 +156,24 @@ special _ ((_,'-') : (_,'-') : cs) = skip cs
 special c ((_,'[') : (_,'C') : (_,'D') : (_,'A') : (_,'T') : (_,'A') : (_,'[')
          : cs) =
   let (xs,ts) = cdata cs
-  in TokText CData { cdLine = Just (fst c), cdVerbatim = True, cdData = xs }
+  in TokText CData { cdLine = Just (fst c), cdVerbatim = CDataVerbatim, cdData = xs }
                                                                   : tokens' ts
   where cdata ((_,']') : (_,']') : (_,'>') : ds) = ([],ds)
         cdata ((_,d) : ds)  = let (xs,ys) = cdata ds in (d:xs,ys)
         cdata []        = ([],[])
 
-special c cs = tag (c : cs) -- invalid specials are processed as tags
+special c cs = 
+  let (xs,ts) = munch "" 0 cs
+  in TokText CData { cdLine = Just (fst c), cdVerbatim = CDataRaw, cdData = '<':'!':(reverse xs) } : tokens' ts
+  where munch acc nesting ((_,'>') : ds) 
+         | nesting == (0::Int) = ('>':acc,ds)
+	 | otherwise           = munch ('>':acc) (nesting-1) ds
+        munch acc nesting ((_,'<') : ds)
+	 = munch ('<':acc) (nesting+1) ds
+        munch acc n ((_,x) : ds) = munch (x:acc) n ds
+        munch acc _ [] = (acc,[]) -- unterminated DTD markup
+
+--special c cs = tag (c : cs) -- invalid specials are processed as tags
 
 
 qualName           :: LString -> (QName,LString)
@@ -197,7 +208,7 @@ attribs cs        = case cs of
                                               -- insert missing >  ...
                                               _ -> tokens' ds)
 
-                      (_,'?') : (_,'>') : ds -> ([], False, tokens' ds)
+                      (_,'?') : (_,'>') : ds -> ([], True, tokens' ds)
 
                       -- doc ended within a tag..
                       []       -> ([],False,[])
