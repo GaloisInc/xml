@@ -1,10 +1,25 @@
+--------------------------------------------------------------------
+-- |
+-- Module    : Text.XML.Light.Cursor
+-- Copyright : (c) Galois, Inc. 2008
+-- License   : BSD3
+--
+-- Maintainer: Iavor S. Diatchki <diatchki@galois.com>
+-- Stability : provisional
+-- Portability:
+--
+-- XML cursors for working XML content withing the context of
+-- an XML document.  This implemntation is based on the general
+-- tree zipper written by Krasimir Angelov and Iavor S. Diatchki.
+--
 
 module Text.XML.Light.Cursor
   ( Tag(..), getTag, setTag, fromTag
-  , Cursor(..)
+  , Cursor(..), Path
 
   -- * Conversions
-  , fromTree
+  , fromContent
+  , fromElement
   , fromForest
   , toForest
   , toTree
@@ -80,7 +95,7 @@ type Path = [([Content],Tag,[Content])]
 
 -- | The position of a piece of content in an XML document.
 data Cursor = Cur
-  { current :: Content      -- ^ The currently selected tree.
+  { current :: Content      -- ^ The currently selected content.
   , lefts   :: [Content]    -- ^ Siblings on the left, closest first.
   , rights  :: [Content]    -- ^ Siblings on the right, closest first.
   , parents :: Path -- ^ The contexts of the parent elements of this location.
@@ -132,7 +147,7 @@ lastChild :: Cursor -> Maybe Cursor
 lastChild loc =
   do (ts, ps) <- downParents loc
      case reverse ts of
-       t : ts -> return Cur { current = t, lefts = ts, rights = []
+       l : ls -> return Cur { current = l, lefts = ls, rights = []
                                                      , parents = ps }
        [] -> Nothing
 
@@ -171,9 +186,13 @@ downParents loc =
 
 -- Conversions -----------------------------------------------------------------
 
--- | A location corresponding to the root of the given tree.
-fromTree :: Content -> Cursor
-fromTree t = Cur { current = t, lefts = [], rights = [], parents = [] }
+-- | A cursor for the guven content.
+fromContent :: Content -> Cursor
+fromContent t = Cur { current = t, lefts = [], rights = [], parents = [] }
+
+-- | A cursor for the guven element.
+fromElement :: Element -> Cursor
+fromElement e = fromContent (Elem e)
 
 -- | The location of the first tree in a forest.
 fromForest :: [Content] -> Maybe Cursor
@@ -192,19 +211,19 @@ toForest loc = let r = root loc in combChildren (lefts r) (current r) (rights r)
 
 -- Queries ---------------------------------------------------------------------
 
--- | Are we at the top of the tree?
+-- | Are we at the top of the document?
 isRoot :: Cursor -> Bool
 isRoot loc = null (parents loc)
 
--- | Are we at the left end of the the tree?
+-- | Are we at the left end of the the document?
 isFirst :: Cursor -> Bool
 isFirst loc = null (lefts loc)
 
--- | Are we at the right end of the tree?
+-- | Are we at the right end of the document?
 isLast :: Cursor -> Bool
 isLast loc = null (rights loc)
 
--- | Are we at the bottom of the tree?
+-- | Are we at the bottom of the document?
 isLeaf :: Cursor -> Bool
 isLeaf loc = isNothing (downParents loc)
 
@@ -220,24 +239,22 @@ getNodeIndex loc = length (lefts loc)
 hasChildren :: Cursor -> Bool
 hasChildren loc = not (isLeaf loc)
 
--- The current tree -----------------------------------------------------------
 
 
--- | Change the current tree.
+-- Updates ---------------------------------------------------------------------
+
+-- | Change the current content.
 setContent :: Content -> Cursor -> Cursor
 setContent t loc = loc { current = t }
 
--- | Modify the current tree.
+-- | Modify the current content.
 modifyContent :: (Content -> Content) -> Cursor -> Cursor
 modifyContent f loc = setContent (f (current loc)) loc
 
--- | Modify the current tree, allowing for an effect.
+-- | Modify the current content, allowing for an effect.
 modifyContentM :: Monad m => (Content -> m Content) -> Cursor -> m Cursor
 modifyContentM f loc = do x <- f (current loc)
                           return (setContent x loc)
-
-
---------------------------------------------------------------------------------
 
 -- | Insert content to the left of the current position.
 insertLeft :: Content -> Cursor -> Cursor
@@ -296,7 +313,7 @@ removeGoUp loc =
     [] -> Nothing
 
 
--- | private: Gets the 'n'th element of a list.
+-- | private: Gets the given element of a list.
 -- Also returns the preceeding elements (reversed) and the folloing elements.
 splitChildren :: [a] -> Int -> Maybe ([a],a,[a])
 splitChildren _ n | n < 0 = Nothing

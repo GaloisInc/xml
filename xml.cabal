@@ -1,5 +1,5 @@
 Name:            xml
-Version:         1.3
+Version:         1.3.1
 Homepage:        http://galois.com
 Synopsis:        A simple XML library.
 Description:     A simple XML library.
@@ -16,5 +16,6 @@ Exposed-modules: Text.XML.Light,
                  Text.XML.Light.Output,
                  Text.XML.Light.Input,
                  Text.XML.Light.Proc
+                 Text.XML.Light.Cursor
 Extensions:      FlexibleInstances
 Build-type:      Simple
