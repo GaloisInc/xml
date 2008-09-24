@@ -102,7 +102,9 @@ annotName (namespaces,def_ns) n =
 annotAttr :: NSInfo -> Attr -> Attr
 annotAttr ns a@(Attr { attrKey = k}) =
   case (qPrefix k, qName k) of
-    (Nothing,"xmlns") -> a
+    -- Do not apply the default name-space to unqualified
+    -- attributes.  See Section 6.2 of <http://www.w3.org/TR/REC-xml-names>.
+    (Nothing, _)      -> a
     _                 -> a { attrKey = annotName ns k }
 
 addNS :: Attr -> NSInfo -> NSInfo
@@ -164,7 +166,10 @@ special c ((_,'[') : (_,'C') : (_,'D') : (_,'A') : (_,'T') : (_,'A') : (_,'[')
 
 special c cs = 
   let (xs,ts) = munch "" 0 cs
-  in TokText CData { cdLine = Just (fst c), cdVerbatim = CDataRaw, cdData = '<':'!':(reverse xs) } : tokens' ts
+  in TokText CData { cdLine = Just (fst c)
+                   , cdVerbatim = CDataRaw
+                   , cdData = '<':'!':(reverse xs)
+                   } : tokens' ts
   where munch acc nesting ((_,'>') : ds) 
          | nesting == (0::Int) = ('>':acc,ds)
 	 | otherwise           = munch ('>':acc) (nesting-1) ds
