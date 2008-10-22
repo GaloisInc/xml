@@ -6,10 +6,10 @@
 --
 -- Maintainer: Iavor S. Diatchki <diatchki@galois.com>
 -- Stability : provisional
--- Portability:
+-- Portability: portable
 --
 -- XML cursors for working XML content withing the context of
--- an XML document.  This implemntation is based on the general
+-- an XML document.  This implementation is based on the general
 -- tree zipper written by Krasimir Angelov and Iavor S. Diatchki.
 --
 
@@ -186,11 +186,11 @@ downParents loc =
 
 -- Conversions -----------------------------------------------------------------
 
--- | A cursor for the guven content.
+-- | A cursor for the given content.
 fromContent :: Content -> Cursor
 fromContent t = Cur { current = t, lefts = [], rights = [], parents = [] }
 
--- | A cursor for the guven element.
+-- | A cursor for the given element.
 fromElement :: Element -> Cursor
 fromElement e = fromContent (Elem e)
 
@@ -264,13 +264,13 @@ insertLeft t loc = loc { lefts = t : lefts loc }
 insertRight :: Content -> Cursor -> Cursor
 insertRight t loc = loc { rights = t : rights loc }
 
--- | Remove the conent on the left of the current position, if any.
+-- | Remove the content on the left of the current position, if any.
 removeLeft :: Cursor -> Maybe (Content,Cursor)
 removeLeft loc = case lefts loc of
                    l : ls -> return (l,loc { lefts = ls })
                    [] -> Nothing
 
--- | Remove the conent on the right of the current position, if any.
+-- | Remove the content on the right of the current position, if any.
 removeRight :: Cursor -> Maybe (Content,Cursor)
 removeRight loc = case rights loc of
                     l : ls -> return (l,loc { rights = ls })
@@ -314,7 +314,7 @@ removeGoUp loc =
 
 
 -- | private: Gets the given element of a list.
--- Also returns the preceeding elements (reversed) and the folloing elements.
+-- Also returns the preceding elements (reversed) and the following elements.
 splitChildren :: [a] -> Int -> Maybe ([a],a,[a])
 splitChildren _ n | n < 0 = Nothing
 splitChildren cs pos = loop [] cs pos
