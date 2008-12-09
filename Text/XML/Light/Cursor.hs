@@ -32,11 +32,13 @@ module Text.XML.Light.Cursor
   , lastChild
   , left
   , right
+  , nextDF
 
   -- ** Searching
   , findChild
   , findLeft
   , findRight
+  , findRec
 
   -- * Node classification
   , isRoot
@@ -69,6 +71,7 @@ module Text.XML.Light.Cursor
 
 import Text.XML.Light.Types
 import Data.Maybe(isNothing)
+import Control.Monad(mplus)
 
 data Tag = Tag { tagName    :: QName
                , tagAttribs :: [Attr]
@@ -166,6 +169,18 @@ findChild :: (Cursor -> Bool) -> Cursor -> Maybe Cursor
 findChild p loc =
   do loc1 <- firstChild loc
      if p loc1 then return loc1 else findRight p loc1
+
+-- | The next position in a left-to-right depth-first traversal of a document:
+-- either the first child, right sibling, or the right sibling of a parent that
+-- has one.
+nextDF :: Cursor -> Maybe Cursor
+nextDF c = firstChild c `mplus` up c
+  where up x = right x `mplus` (up =<< parent x)
+
+-- | Perform a depth first search for a descendant that satisfies the
+-- given predicate.
+findRec :: (Cursor -> Bool) -> Cursor -> Maybe Cursor
+findRec p c = if p c then Just c else findRec p =<< nextDF c
 
 -- | The child with the given index (starting from 0).
 getChild :: Int -> Cursor -> Maybe Cursor
