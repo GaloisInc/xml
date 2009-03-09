@@ -120,7 +120,10 @@ escChar c = case c of
   '>'   -> showString "&gt;"
   '&'   -> showString "&amp;"
   '"'   -> showString "&quot;"
-  '\''  -> showString "&apos;"
+  -- we use &#39 instead of &apos; because IE apparently has difficulties
+  -- rendering &apos; in xhtml.
+  -- Reported by Rohan Drape <rohan.drape@gmail.com>.
+  '\''  -> showString "&#39;"
   -- XXX: Is this really wortherd?
   -- We could deal with these issues when we convert characters to bytes.
   _ | (oc <= 0x7f && isPrint c) || c == '\n' || c == '\r' -> showChar c
