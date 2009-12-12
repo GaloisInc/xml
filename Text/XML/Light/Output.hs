@@ -14,6 +14,8 @@
 module Text.XML.Light.Output
   ( showTopElement, showContent, showElement, showCData, showQName, showAttr
   , ppTopElement, ppContent, ppElement
+  , ppcTopElement, ppcContent, ppcElement
+  , ConfigPP, defaultConfigPP, useShortEmptyTags
   , tagEnd, xml_header
   ) where
 
@@ -25,42 +27,98 @@ import Data.List ( isPrefixOf )
 xml_header :: String
 xml_header = "<?xml version='1.0' ?>"
 
+
+--------------------------------------------------------------------------------
+data ConfigPP = ConfigPP
+  { shortEmptyTag :: QName -> Bool
+  , prettify      :: Bool
+  }
+
+-- | Default pretty orinting configutaion.
+--  * Always use abbreviate empty tags.
+defaultConfigPP :: ConfigPP
+defaultConfigPP = ConfigPP { shortEmptyTag = const True
+                           , prettify      = False
+                           }
+
+-- | The predicate specifies for which empty tags we should use XML's
+-- abbreviated notation <TAG />.  This is useful if we are working with
+-- some XML-ish standards (such as certain versions of HTML) where some
+-- empty tags should always be displayed in the <TAG></TAG> form.
+useShortEmptyTags :: (QName -> Bool) -> ConfigPP -> ConfigPP
+useShortEmptyTags p c = c { shortEmptyTag = p }
+
+
+-- | Dpecify if we should Use extra white-space to make document more readable.
+-- WARNING: This adds additional white-space to text elements,
+-- and so it may change the meaning of the document.
+useExtraWhiteSpace :: Bool -> ConfigPP -> ConfigPP
+useExtraWhiteSpace p c  = c { prettify = p }
+
+
+--------------------------------------------------------------------------------
+
+
+prettyConfigPP     :: ConfigPP
+prettyConfigPP      = useExtraWhiteSpace True defaultConfigPP
+
 -- | Pretty printing renders XML documents faithfully,
 -- with the exception that whitespace may be added\/removed
 -- in non-verbatim character data.
 ppTopElement       :: Element -> String
-ppTopElement e      = unlines [xml_header,ppElement e]
+ppTopElement        = ppcTopElement prettyConfigPP
 
 -- | Pretty printing elements
 ppElement          :: Element -> String
-ppElement e         = ppElementS "" e ""
+ppElement           = ppcElement prettyConfigPP
 
 -- | Pretty printing content
 ppContent          :: Content -> String
-ppContent x         = ppContentS "" x ""
+ppContent           = ppcContent prettyConfigPP
+
+
+
+-- | Pretty printing renders XML documents faithfully,
+-- with the exception that whitespace may be added\/removed
+-- in non-verbatim character data.
+ppcTopElement      :: ConfigPP -> Element -> String
+ppcTopElement c e   = unlines [xml_header,ppcElement c e]
+
+-- | Pretty printing elements
+ppcElement         :: ConfigPP -> Element -> String
+ppcElement c e      = ppElementS c "" e ""
+
+-- | Pretty printing content
+ppcContent         :: ConfigPP -> Content -> String
+ppcContent c x      = ppContentS c "" x ""
+
+
+
+
 
 -- | Pretty printing content using ShowS
-ppContentS         :: String -> Content -> ShowS
-ppContentS i x xs   = case x of
-                        Elem e -> ppElementS i e xs
-                        Text c -> ppCData i c xs
+ppContentS         :: ConfigPP -> String -> Content -> ShowS
+ppContentS c i x xs = case x of
+                        Elem e -> ppElementS c i e xs
+                        Text t -> ppCDataS c i t xs
                         CRef r -> showCRefS r xs
 
-ppElementS         :: String -> Element -> ShowS
-ppElementS i e xs   = i ++ (tagStart (elName e) (elAttribs e) $
+ppElementS         :: ConfigPP -> String -> Element -> ShowS
+ppElementS c i e xs = i ++ (tagStart (elName e) (elAttribs e) $
   case elContent e of
-    [] 
-     | not ("?xml" `isPrefixOf` (qName $ elName e)) -> " />" ++ xs
-     | otherwise -> " ?>" ++ xs
-    [Text t] -> ">" ++ ppCData "" t (tagEnd (elName e) xs)
-    cs -> ">\n" ++ foldr ppSub (i ++ tagEnd (elName e) xs) cs
-      where ppSub e1 = ppContentS ("  " ++ i) e1 . showChar '\n'
+    [] | "?" `isPrefixOf` qName name -> " ?>" ++ xs
+       | shortEmptyTag c name  -> " />" ++ xs
+    [Text t] -> ">" ++ ppCDataS c "" t (tagEnd name xs)
+    cs -> '>' : nl ++ foldr ppSub (i ++ tagEnd name xs) cs
+      where ppSub e1 = ppContentS c (sp ++ i) e1 . showString nl
+            (nl,sp)  = if prettify c then ("\n","  ") else ("","")
   )
+  where name = elName e
 
-ppCData            :: String -> CData -> ShowS
-ppCData i c xs      = i ++ if (cdVerbatim c /= CDataText )
-                              then showCDataS c xs
-                              else foldr cons xs (showCData c)
+ppCDataS           :: ConfigPP -> String -> CData -> ShowS
+ppCDataS c i t xs   = i ++ if cdVerbatim t /= CDataText || not (prettify c)
+                             then showCDataS t xs
+                             else foldr cons xs (showCData t)
 
   where cons         :: Char -> String -> String
         cons '\n' ys  = "\n" ++ i ++ ys
@@ -69,43 +127,31 @@ ppCData i c xs      = i ++ if (cdVerbatim c /= CDataText )
 
 
 --------------------------------------------------------------------------------
+
 -- | Adds the <?xml?> header.
 showTopElement     :: Element -> String
 showTopElement c    = xml_header ++ showElement c
 
 showContent        :: Content -> String
-showContent c       = showContentS c ""
+showContent c       = ppContentS defaultConfigPP "" c ""
 
 showElement        :: Element -> String
-showElement c       = showElementS c ""
+showElement c       = ppElementS defaultConfigPP "" c ""
 
 showCData          :: CData -> String
-showCData c         = showCDataS c ""
+showCData c         = ppCDataS defaultConfigPP "" c ""
 
 -- Note: crefs should not contain '&', ';', etc.
 showCRefS          :: String -> ShowS
 showCRefS r xs      = '&' : r ++ ';' : xs
 
--- | Good for transmition (no extra white space etc.) but less readable.
-showContentS           :: Content -> ShowS
-showContentS (Elem e)   = showElementS e
-showContentS (Text cs)  = showCDataS cs
-showContentS (CRef cs)  = showCRefS cs
-
--- | Good for transmition (no extra white space etc.) but less readable.
-showElementS       :: Element -> ShowS
-showElementS e xs =
-  tagStart (elName e) (elAttribs e)
-    $ case elContent e of
-        [] -> " />" ++ xs
-        ch -> '>' : foldr showContentS (tagEnd (elName e) xs) ch
-
 -- | Convert a text element to characters.
 showCDataS         :: CData -> ShowS
-showCDataS cd = 
+showCDataS cd =
  case cdVerbatim cd of
    CDataText     -> escStr (cdData cd)
-   CDataVerbatim -> showString "<![CDATA[" . escCData (cdData cd) . showString "]]>"
+   CDataVerbatim -> showString "<![CDATA[" . escCData (cdData cd)
+                                           . showString "]]>"
    CDataRaw      -> \ xs -> cdData cd ++ xs
 
 --------------------------------------------------------------------------------
