@@ -94,10 +94,22 @@ filterElementsName       :: (QName -> Bool) -> Element -> [Element]
 filterElementsName p e = filterElements (p.elName) e
 
 -- | Lookup the value of an attribute.
-findAttr           :: QName -> Element -> Maybe String
-findAttr x e        = attrVal `fmap` find ((x ==) . attrKey) (elAttribs e)
+findAttr          :: QName -> Element -> Maybe String
+findAttr x e       = lookupAttr x (elAttribs e)
 
 -- | Lookup attribute name from list.
-lookupAttr           :: QName -> [Attr] -> Maybe String
-lookupAttr x as        = attrVal `fmap` find ((x ==) . attrKey) as
+lookupAttr        :: QName -> [Attr] -> Maybe String
+lookupAttr x       = lookupAttrBy (x ==)
+
+-- | Lookup the first attribute whose name satisfies the given predicate.
+lookupAttrBy       :: (QName -> Bool) -> [Attr] -> Maybe String
+lookupAttrBy p as   = attrVal `fmap` find (p . attrKey) as
+
+-- | Lookup the value of the first attribute whose name
+-- satisfies the given predicate.
+findAttrBy         :: (QName -> Bool) -> Element -> Maybe String
+findAttrBy p e      = lookupAttrBy p (elAttribs e)
+
+
+
 
