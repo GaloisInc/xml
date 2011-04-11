@@ -15,7 +15,9 @@ module Text.XML.Light.Output
   ( showTopElement, showContent, showElement, showCData, showQName, showAttr
   , ppTopElement, ppContent, ppElement
   , ppcTopElement, ppcContent, ppcElement
-  , ConfigPP, defaultConfigPP, useShortEmptyTags
+  , ConfigPP
+  , defaultConfigPP, prettyConfigPP
+  , useShortEmptyTags, useExtraWhiteSpace
   , tagEnd, xml_header
   ) where
 
@@ -49,18 +51,21 @@ useShortEmptyTags :: (QName -> Bool) -> ConfigPP -> ConfigPP
 useShortEmptyTags p c = c { shortEmptyTag = p }
 
 
--- | Dpecify if we should Use extra white-space to make document more readable.
+-- | Specify if we should use extra white-space to make document more readable.
 -- WARNING: This adds additional white-space to text elements,
 -- and so it may change the meaning of the document.
 useExtraWhiteSpace :: Bool -> ConfigPP -> ConfigPP
 useExtraWhiteSpace p c  = c { prettify = p }
 
+-- | A configuration that tries to make things pretty
+-- (possibly at the cost of changing the semantics a bit
+-- through adding white space.)
+prettyConfigPP     :: ConfigPP
+prettyConfigPP      = useExtraWhiteSpace True defaultConfigPP
+
 
 --------------------------------------------------------------------------------
 
-
-prettyConfigPP     :: ConfigPP
-prettyConfigPP      = useExtraWhiteSpace True defaultConfigPP
 
 -- | Pretty printing renders XML documents faithfully,
 -- with the exception that whitespace may be added\/removed
