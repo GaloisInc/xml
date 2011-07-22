@@ -4,7 +4,7 @@ module Text.XML.Light.Lexer where
 
 import Text.XML.Light.Types
 
-import Data.Char (chr,isSpace,ord)
+import Data.Char (chr,isSpace)
 import Numeric (readHex)
 import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
