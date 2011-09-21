@@ -8,6 +8,8 @@ import Data.Char (chr,isSpace)
 import Numeric (readHex)
 import qualified Data.ByteString      as S
 import qualified Data.ByteString.Lazy as L
+import qualified Data.Text            as TS
+import qualified Data.Text.Lazy       as TL
 
 
 class XmlSource s where
@@ -24,6 +26,12 @@ instance XmlSource S.ByteString where
 instance XmlSource L.ByteString where
   uncons bs = f `fmap` L.uncons bs
     where f (c,s) = (chr (fromEnum c), s)
+
+instance XmlSource TS.Text where
+  uncons = TS.uncons
+
+instance XmlSource TL.Text where
+  uncons = TL.uncons
 
 linenumber :: XmlSource s => Integer -> s -> LString
 linenumber n s = case uncons s of

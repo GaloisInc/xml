@@ -9,7 +9,7 @@ License-File:    LICENSE
 Author:          Galois Inc.
 Maintainer:      diatchki@galois.com
 Copyright:       (c) 2007-2008 Galois Inc.
-Build-depends:   base >= 3 && < 5, bytestring
+Build-depends:   base >= 3 && < 5, bytestring, text
 Ghc-options:     -Wall -O2
 Exposed-modules: Text.XML.Light,
                  Text.XML.Light.Types,
