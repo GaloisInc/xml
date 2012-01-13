@@ -175,11 +175,10 @@ escChar c = case c of
   -- rendering &apos; in xhtml.
   -- Reported by Rohan Drape <rohan.drape@gmail.com>.
   '\''  -> showString "&#39;"
-  -- XXX: Is this really wortherd?
-  -- We could deal with these issues when we convert characters to bytes.
+
   -- NOTE: We escape '\r' explicitly because otherwise they get lost
   -- when parsed back in because of then end-of-line normalization rules.
-  _ | (oc <= 0x7f && isPrint c) || c == '\n' -> showChar c
+  _ | isPrint c || c == '\n' -> showChar c
     | otherwise -> showString "&#" . shows oc . showChar ';'
       where oc = ord c
 
