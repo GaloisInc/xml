@@ -10,7 +10,7 @@ Author:          Galois Inc.
 Maintainer:      diatchki@galois.com
 Copyright:       (c) 2007-2008 Galois Inc.
 Build-type:      Simple
-Cabal-version:   >= 1.2
+Cabal-version:   >= 1.6
 
 
 library
