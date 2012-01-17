@@ -11,7 +11,11 @@
 -- Basic XML types.
 --
 
+{-# LANGUAGE DeriveDataTypeable #-}
 module Text.XML.Light.Types where
+
+import Data.Typeable(Typeable)
+import Data.Data(Data)
 
 -- | A line is an Integer
 type Line     = Integer
@@ -20,7 +24,7 @@ type Line     = Integer
 data Content  = Elem Element
               | Text CData
               | CRef String
-                deriving Show
+                deriving (Show, Typeable, Data)
 
 -- | XML elements
 data Element  = Element {
@@ -28,33 +32,33 @@ data Element  = Element {
                   elAttribs   :: [Attr],
                   elContent   :: [Content],
                   elLine      :: Maybe Line
-                } deriving Show
+                } deriving (Show, Typeable, Data)
 
 -- | XML attributes
 data Attr     = Attr {
                   attrKey :: QName,
                   attrVal :: String
-                } deriving (Eq,Ord,Show)
+                } deriving (Eq, Ord, Show, Typeable, Data)
 
 -- | XML CData
 data CData    = CData {
                   cdVerbatim  :: CDataKind,
                   cdData      :: String,
                   cdLine      :: Maybe Line
-                } deriving Show
+                } deriving (Show, Typeable, Data)
 
 data CDataKind
  = CDataText      -- ^ Ordinary character data; pretty printer escapes &, < etc.
  | CDataVerbatim  -- ^ Unescaped character data; pretty printer embeds it in <![CDATA[..
  | CDataRaw       -- ^ As-is character data; pretty printer passes it along without any escaping or CDATA wrap-up.
-   deriving ( Eq, Show )
+   deriving ( Eq, Show, Typeable, Data )
 
 -- | XML qualified names
 data QName    = QName {
                   qName   :: String,
                   qURI    :: Maybe String,
                   qPrefix :: Maybe String
-                } deriving Show
+                } deriving (Show, Typeable, Data)
 
 
 instance Eq QName where
