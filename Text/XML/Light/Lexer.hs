@@ -45,6 +45,20 @@ linenumber n s = case uncons s of
   next s' = n' `seq` ((n,'\n'):linenumber n' s') where n' = n + 1
 
 
+-- | This type may be used to provide a custom scanning function
+-- for extracting characters.
+data Scanner s = Scanner (Maybe (Char,s)) (s -> Maybe (Char,s))
+
+-- | This type may be used to provide a custom scanning function
+-- for extracting characters.
+customScanner :: (s -> Maybe (Char,s)) -> s -> Scanner s
+customScanner next s = Scanner (next s) next
+
+instance XmlSource (Scanner s) where
+  uncons (Scanner this next) = do (c,s1) <- this
+                                  return (c, Scanner (next s1) next)
+
+
 -- Lexer -----------------------------------------------------------------------
 
 type LChar              = (Line,Char)
