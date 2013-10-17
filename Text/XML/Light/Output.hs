@@ -36,7 +36,7 @@ data ConfigPP = ConfigPP
   , prettify      :: Bool
   }
 
--- | Default pretty orinting configutaion.
+-- | Default pretty orinting configuration.
 --  * Always use abbreviate empty tags.
 defaultConfigPP :: ConfigPP
 defaultConfigPP = ConfigPP { shortEmptyTag = const True
