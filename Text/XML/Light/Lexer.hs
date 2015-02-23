@@ -139,7 +139,7 @@ qualName xs         = let (as,bs) = breakn endName xs
 
 tag              :: LString -> [Token]
 tag ((p,'/') : cs)    = let (n,ds) = qualName (dropSpace cs)
-                        in TokEnd p n : case ds of
+                        in TokEnd p n : case (dropSpace ds) of
                                           (_,'>') : es -> tokens' es
                                           -- tag was not properly closed...
                                           _        -> tokens' ds
