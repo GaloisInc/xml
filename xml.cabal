@@ -1,6 +1,6 @@
 Name:            xml
 Version:         1.3.14
-Homepage:        http://code.galois.com
+Homepage:        https://github.com/GaloisInc/xml/
 Synopsis:        A simple XML library.
 Description:     A simple XML library.
 Category:        Text, XML
