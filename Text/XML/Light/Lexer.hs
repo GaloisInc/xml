@@ -108,17 +108,17 @@ special c ((_,'[') : (_,'C') : (_,'D') : (_,'A') : (_,'T') : (_,'A') : (_,'[')
         cdata ((_,d) : ds)  = let (xs,ys) = cdata ds in (d:xs,ys)
         cdata []        = ([],[])
 
-special c cs = 
+special c cs =
   let (xs,ts) = munch "" 0 cs
   in TokText CData { cdLine = Just (fst c)
                    , cdVerbatim = CDataRaw
                    , cdData = '<':'!':(reverse xs)
                    } : tokens' ts
-  where munch acc nesting ((_,'>') : ds) 
+  where munch acc nesting ((_,'>') : ds)
          | nesting == (0::Int) = ('>':acc,ds)
-	 | otherwise           = munch ('>':acc) (nesting-1) ds
+         | otherwise           = munch ('>':acc) (nesting-1) ds
         munch acc nesting ((_,'<') : ds)
-	 = munch ('<':acc) (nesting+1) ds
+         = munch ('<':acc) (nesting+1) ds
         munch acc n ((_,x) : ds) = munch (x:acc) n ds
         munch acc _ [] = (acc,[]) -- unterminated DTD markup
 
