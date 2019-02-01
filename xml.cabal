@@ -27,5 +27,4 @@ library
 
 source-repository head
   type:       git
-  location:   git://code.galois.com/xml.git
-
+  location:   git://github.com/GaloisInc/xml.git
